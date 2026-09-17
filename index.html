@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Missão McCallister | PÚBLICO & McDonald's</title>
+  <style>
+    :root {
+      --mcd-red: #DA291C;
+      --mcd-yellow: #FFBC0D;
+      --bg-dark: #12151A;
+      --card-bg: #1E232B;
+      --text: #F3F4F6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    /* Cabeçalho Editorial */
+    header {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #2D3748;
+      padding-bottom: 8px;
+    }
+
+    .brand-tag {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #9CA3AF;
+    }
+
+    .brand-tag span {
+      color: var(--mcd-yellow);
+      font-weight: 700;
+    }
+
+    /* Contentor do Jogo */
+    .game-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 860px;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.6);
+      border: 2px solid #2D3748;
+    }
+
+    /* HUD Superior */
+    .hud-top {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .timer-box {
+      background: rgba(18, 21, 26, 0.9);
+      border: 2px solid var(--mcd-red);
+      border-radius: 8px;
+      padding: 6px 14px;
+      text-align: center;
+      pointer-events: auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    .timer-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #D1D5DB;
+    }
+
+    .timer-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--mcd-yellow);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Inventário */
+    .inventory-bar {
+      background: rgba(18, 21, 26, 0.9);
+      border: 1px solid #374151;
+      border-radius: 8px;
+      display: flex;
+      gap: 6px;
+      padding: 6px 10px;
+      pointer-events: auto;
+    }
+
+    .inv-slot {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      background: #28303D;
+      border: 1px dashed #4B5563;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .inv-slot.filled {
+      border-style: solid;
+      border-color: var(--mcd-yellow);
+      background: #1F2937;
+    }
+
+    .inv-slot span {
+      font-size: 8px;
+      color: #9CA3AF;
+      margin-top: 2px;
+    }
+
+    /* Cenário e Hotspots */
+    .viewport {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      /* Imagem de fundo isométrica */
+      background-image: url('watermarked_img_18322746860002387783.jpg');
+    }
+
+    .hotspot {
+      position: absolute;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(218, 41, 28, 0.7);
+      border: 2px solid var(--mcd-yellow);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translate(-50%, -50%);
+      transition: transform 0.2s, background 0.2s;
+      z-index: 5;
+    }
+
+    .hotspot::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 2px solid var(--mcd-yellow);
+      animation: pulse 1.8s infinite;
+    }
+
+    .hotspot:hover {
+      transform: translate(-50%, -50%) scale(1.15);
+      background: rgba(218, 41, 28, 0.95);
+    }
+
+    .hotspot-icon {
+      font-size: 16px;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    /* Posições dos Hotspots sobre a planta */
+    #spot-kitchen   { top: 76%; left: 36%; }
+    #spot-stairs    { top: 61%; left: 70%; }
+    #spot-attic     { top: 38%; left: 53%; }
+    #spot-bedroom   { top: 38%; left: 24%; }
+
+    /* Barra Inferior de Missão */
+    .hud-bottom {
+      padding: 10px 16px;
+      background: #181D24;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #2D3748;
+    }
+
+    .mission-text {
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .mission-text b {
+      color: var(--mcd-yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .progress-pill {
+      background: #28303D;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      color: #D1D5DB;
+    }
+
+    /* Modal / Pop-up de Enigma */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 20px;
+    }
+
+    .modal-card {
+      background: var(--card-bg);
+      border: 1px solid #374151;
+      border-radius: 10px;
+      max-width: 440px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      position: relative;
+    }
+
+    .modal-card h3 {
+      font-size: 17px;
+      color: var(--mcd-yellow);
+      margin-bottom: 8px;
+    }
+
+    .modal-card p {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #D1D5DB;
+      margin-bottom: 14px;
+    }
+
+    .brand-highlight {
+      background: rgba(218, 41, 28, 0.15);
+      border-left: 3px solid var(--mcd-red);
+      padding: 8px 12px;
+      font-size: 12px;
+      margin-bottom: 16px;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+    .btn-secondary { background: #374151; color: #fff; }
+    .btn-primary { background: var(--mcd-red); color: #fff; }
+
+    /* Ecrã de Vitória Final */
+    .victory-badge {
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .victory-badge h2 {
+      color: var(--mcd-yellow);
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand-tag">PÚBLICO × <span>McDonald's</span> | Estúdio P</div>
+    <div class="brand-tag">Especial de Natal 2026</div>
+  </header>
+
+  <div class="game-wrapper">
+    <!-- HUD Superior -->
+    <div class="hud-top">
+      <div class="timer-box">
+        <div class="timer-label">Tempo Restante</div>
+        <div class="timer-val" id="timer">25:00</div>
+      </div>
+
+      <div class="inventory-bar">
+        <div class="inv-slot" id="slot-1" title="Vazio"><span>1</span></div>
+        <div class="inv-slot" id="slot-2" title="Vazio"><span>2</span></div>
+        <div class="inv-slot" id="slot-3" title="Vazio"><span>3</span></div>
+        <div class="inv-slot" id="slot-4" title="Vazio"><span>4</span></div>
+      </div>
+    </div>
+
+    <!-- Cenário e Hotspots Interativos -->
+    <div class="viewport" id="viewport">
+      <div class="hotspot" id="spot-kitchen" onclick="openPuzzle('cozinha')">
+        <span class="hotspot-icon">🍔</span>
+      </div>
+      <div class="hotspot" id="spot-stairs" onclick="openPuzzle('escadas')">
+        <span class="hotspot-icon">🧦</span>
+      </div>
+      <div class="hotspot" id="spot-attic" onclick="openPuzzle('sotao')">
+        <span class="hotspot-icon">🔧</span>
+      </div>
+      <div class="hotspot" id="spot-bedroom" onclick="openPuzzle('quarto')">
+        <span class="hotspot-icon">🕷️</span>
+      </div>
+    </div>
+
+    <!-- HUD Inferior -->
+    <div class="hud-bottom">
+      <div class="mission-text">
+        <b>Missão:</b> Neutraliza as 4 divisões antes da chegada dos invasores.
+      </div>
+      <div class="progress-pill" id="progress-indicator">Armadilhas ativas: 0 / 4</div>
+    </div>
+
+    <!-- Modal Dinâmico de Enigma -->
+    <div class="modal-overlay" id="puzzle-modal">
+      <div class="modal-card">
+        <h3 id="modal-title">Título do Enigma</h3>
+        <p id="modal-desc">Descrição do desafio na divisão.</p>
+        <div class="brand-highlight" id="modal-brand">Ligação com Packaging / Merchandising</div>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" onclick="closeModal()">Recuar</button>
+          <button class="btn btn-primary" id="modal-action-btn" onclick="resolveCurrentPuzzle()">Ativar Armadilha</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Definição dos Enigmas das 4 Divisões
+    const puzzles = {
+      cozinha: {
+        title: "Cozinha: O Banquete Estratégico",
+        desc: "Os assaltantes aproximam-se pela porta das traseiras. Precisas de derramar óleo na entrada enquanto proteges o banquete de Natal antes que arrefeça.",
+        brand: "💡 Pista: O padrão na embalagem festiva da Casa McDonald's esconde a sequência de abertura do fecho de segurança.",
+        icon: "🍔",
+        name: "Menu de Natal",
+        slot: 1
+      },
+      escadas: {
+        title: "Hall de Entrada: A Emboscada dos Degraus",
+        desc: "A escada principal é o acesso ao piso superior. Para atrasar Harry e Marv, tens de estender as meias festivas recheadas de ornamentos escorregadios.",
+        brand: "💡 Elemento: As meias temáticas McDonald's (Kevin, Grimace e Hamburglar) servem de camuflagem nos corrimãos.",
+        icon: "🧦",
+        name: "Meias Natalícias",
+        slot: 2
+      },
+      sotao: {
+        title: "Sótão: A Pressão da Caldeira",
+        desc: "O aquecedor central emite ruídos ameaçadores. Regula a válvula de vapor para criar uma cortina de fumo e bloquear a claraboia.",
+        brand: "💡 Pista: O código da válvula corresponde ao número de janelas iluminadas na caixa de Natal do menu.",
+        icon: "🔧",
+        name: "Válvula Térmica",
+        slot: 3
+      },
+      quarto: {
+        title: "Quarto de Buzz: O Fator Surpresa",
+        desc: "A tarântula de estimação escapou da caixa de vidro. Precisas de a direcionar para a janela aberta de forma a assustar os invasores cá fora.",
+        brand: "💡 Elemento: O saco kraft de take-away Home Alone serve de túnel provisório para a armadilha.",
+        icon: "🕷️",
+        name: "Tarântula Alerta",
+        slot: 4
+      }
+    };
+
+    let currentRoom = null;
+    let solvedCount = 0;
+    const solvedRooms = {};
+
+    function openPuzzle(roomKey) {
+      if (solvedRooms[roomKey]) return;
+
+      currentRoom = roomKey;
+      const data = puzzles[roomKey];
+      document.getElementById('modal-title').innerText = data.title;
+      document.getElementById('modal-desc').innerText = data.desc;
+      document.getElementById('modal-brand').innerText = data.brand;
+      document.getElementById('puzzle-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('puzzle-modal').style.display = 'none';
+      currentRoom = null;
+    }
+
+    function resolveCurrentPuzzle() {
+      if (!currentRoom || solvedRooms[currentRoom]) return;
+
+      solvedRooms[currentRoom] = true;
+      solvedCount++;
+
+      // Atualiza o inventário
+      const data = puzzles[currentRoom];
+      const slot = document.getElementById(`slot-${data.slot}`);
+      slot.innerHTML = `${data.icon}<span>${data.name}</span>`;
+      slot.classList.add('filled');
+
+      // Desativa o hotspot no cenário
+      const hotspot = document.getElementById(`spot-${currentRoom}`);
+      if (hotspot) {
+        hotspot.style.background = "#10B981"; // Verde de resolvido
+        hotspot.style.borderColor = "#6EE7B7";
+        hotspot.innerHTML = "✓";
+      }
+
+      // Atualiza o progresso
+      document.getElementById('progress-indicator').innerText = `Armadilhas ativas: ${solvedCount} / 4`;
+
+      closeModal();
+
+      // Condição de Vitória
+      if (solvedCount === 4) {
+        setTimeout(showVictory, 400);
+      }
+    }
+
+    function showVictory() {
+      const modal = document.getElementById('puzzle-modal');
+      const card = modal.querySelector('.modal-card');
+      card.innerHTML = `
+        <div class="victory-badge">
+          <h2>Perímetro Assegurado! 🎄</h2>
+          <p>Completaste o plano de defesa a tempo. Os ladrões recuaram e a casa está segura.</p>
+          <div class="brand-highlight" style="margin: 16px 0; text-align: left;">
+            🎁 <b>Recompensa Desbloqueada:</b> Apresenta o código <b>HOMEALONE26</b> na App McDonald's para levantares as tuas meias temáticas exclusivas com o Menu de Natal.
+          </div>
+          <button class="btn btn-primary" onclick="alert('Funcionalidade de partilha nativa (Web Share API) pronta para Instagram Stories/WhatsApp.')" style="width: 100%; margin-top: 8px;">
+            Partilhar Vitória nos Stories 📲
+          </button>
+        </div>
+      `;
+      modal.style.display = 'flex';
+    }
+
+    // Cronómetro Regressivo
+    let secondsLeft = 25 * 60;
+    const timerEl = document.getElementById('timer');
+
+    setInterval(() => {
+      if (secondsLeft <= 0 || solvedCount === 4) return;
+      secondsLeft--;
+      const mins = Math.floor(secondsLeft / 60);
+      const secs = secondsLeft % 60;
+      timerEl.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }, 1000);
+  </script>
+</body>
+</html>
